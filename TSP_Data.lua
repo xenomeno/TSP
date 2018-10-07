@@ -1,6 +1,8 @@
-dofile("CommonAI.lua")
-
 -- Configurations for Traveling Salesman Problem taken from TSPLIB
+
+function Euc2D(c1, c2)
+	return math.sqrt((c1[1] - c2[1]) ^ 2 + (c1[2] - c2[2]) ^ 2)
+end
 
 Berlin52 =
 {

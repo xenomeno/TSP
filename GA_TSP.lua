@@ -2,11 +2,10 @@ dofile("TSP_Data.lua")
 dofile("Graphics.lua")
 dofile("Bitmap.lua")
 dofile("GA_Common.lua")
-dofile("CommonAI.lua")
 
 local POPULATION_SIZE       = 1500
 local CROSSOVER_RATE        = 0.6
-local MAX_GENERATIONS       = 6000
+local MAX_GENERATIONS       = 600
 
 local IMAGE_WIDTH           = 1280
 local IMAGE_HEIGHT          = 720
@@ -18,6 +17,75 @@ local INVERSION_RATE        = false     -- this will be set inverse of the CHROM
 
 local function Min(a, b) return (not a or b < a) and b or a end
 local function Max(a, b) return (not a or b > a) and b or a end
+
+function table.min(t, functor)
+	local min, min_i
+	if functor then
+		local min_value
+		for i = 1, #t do
+			local value = functor(t[i])
+			if value and (not min_value or value < min_value) then
+				min, min_value, min_i = t[i], value, i
+			end
+		end
+	else
+		min, min_i = t[1], 1
+		for i = 2, #t do
+			local value = t[i]
+			if value < min then
+				min, min_i = value, i
+			end
+		end
+	end
+	return min, min_i
+end
+
+function table.copy(t, deep, filter)
+	if type(t) ~= "table" then
+		assert(false, "Attept to table.copy a var of type " .. type(t))
+		return {}
+	end	
+
+	if type(deep) == "number" then
+		deep = deep > 1 and deep - 1
+	end
+	
+	local meta = getmetatable(t)
+	if meta then
+		local __copy = rawget(meta, "__copy")
+		if __copy then
+			return __copy(t)
+		elseif type(t.class) == "string" then
+			assert(false, "Attept to table.copy an object of class " .. t.class)
+			return {}
+		end
+	end
+	local copy = {}
+	for k, v in pairs(t) do
+		if deep then
+			if type(k) == "table" then k = table.copy(k, deep) end
+			if type(v) == "table" then v = table.copy(v, deep) end
+		end
+		if not filter or filter(k, v) then
+			copy[k] = v
+		end
+	end
+	return copy
+end
+
+function table.find(array, field, value)
+	if not array then return end
+	if value == nil then
+		value = field
+		for i = 1, #array do
+			if value == array[i] then return i end
+		end
+	else
+		for i = 1, #array do
+			if value == array[i][field] then return i end
+		end
+	end
+end
 
 local function GenerateRandomPermutation(cities)
   local avail = {}
@@ -630,12 +698,12 @@ local function RunTest(test_name)
   end
 end
 
-RunTest("Berlin52_PMX")
+--RunTest("Berlin52_PMX")
 --RunTest("Berlin52_OX")
 --RunTest("Berlin52_CX_5_50")
 --RunTest("Berlin52_CX_55_100")
 
---RunTSP(Berlin52, "PMX", 80, 30, "Berlin52_PMX_80_30")
+RunTSP(Berlin52, "PMX", 80, 30, "Berlin52_PMX_80_30")
 --RunTSP(Berlin52, "OX", 10, 70, "Berlin52_OX_10_70")
 --RunTSP(Berlin52, "CX", 100, 40, "Berlin52_CX_100_40")
 --RunTSP(Berlin52, "CX", 0, 60, "Berlin52_CX_0_60")
